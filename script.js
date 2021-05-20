@@ -72,14 +72,38 @@ const displayMovements = function (movements) {
       <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
-      <div class="movements__value">${Math.abs(mov)}</div>
+      <div class="movements__value">${Math.abs(mov)}€</div>
     </div>`;
 
     containerMovements.insertAdjacentHTML("afterbegin", html);
   });
 };
 
-displayMovements(account1.movements);
+const calcDisplayBalance = function (acc) {
+  const balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
+  acc.balance = balance;
+  labelBalance.textContent = `${balance}€`;
+};
+
+const calcSummary = function (account) {
+  const deposits = account.movements
+    .filter((mov) => mov > 0)
+    .reduce((acc, curr) => acc + curr, 0);
+
+  const withdrawals = account.movements
+    .filter((mov) => mov < 0)
+    .reduce((acc, curr) => acc + curr, 0);
+
+  const interest = account.movements
+    .filter((mov) => mov > 0)
+    .map((deposit) => deposit * (account.interestRate / 100))
+    .filter((interest) => interest >= 1)
+    .reduce((acc, curr) => acc + curr, 0);
+
+  labelSumIn.textContent = `${deposits}€`;
+  labelSumOut.textContent = `${Math.abs(withdrawals)}€`;
+  labelSumInterest.textContent = `${interest}€`;
+};
 
 const createUsernames = function (accounts) {
   // Since we need to mutate the orignal objects to add a property , hence using a forEach method
@@ -93,3 +117,65 @@ const createUsernames = function (accounts) {
 };
 
 createUsernames(accounts);
+
+const updateUI = function (acc) {
+  displayMovements(acc.movements);
+  calcDisplayBalance(acc);
+  calcSummary(acc);
+};
+
+let currentAccount;
+btnLogin.addEventListener("click", function (e) {
+  e.preventDefault();
+  inputLoginPin.blur();
+  currentAccount = accounts.find(
+    (acc) => acc.username === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    containerApp.style.opacity = 100;
+
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(" ")[0]
+    }`;
+    updateUI(currentAccount);
+  }
+  inputLoginUsername.value = inputLoginPin.value = "";
+});
+
+btnClose.addEventListener("click", function (e) {
+  e.preventDefault();
+  if (
+    inputCloseUsername.value === currentAccount.username &&
+    Number(inputClosePin.value) === currentAccount.pin
+  ) {
+    const index = accounts.findIndex(
+      (acc) => acc.username === currentAccount.username
+    );
+
+    accounts.splice(index, 1);
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = "";
+});
+
+btnTransfer.addEventListener("click", function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputTransferAmount.value);
+  const recieverAcc = accounts.find(
+    (acc) => acc.username === inputTransferTo.value
+  );
+
+  if (
+    amount > 0 &&
+    recieverAcc &&
+    currentAccount?.balance >= amount &&
+    currentAccount.username !== inputTransferTo.value
+  ) {
+    currentAccount.movements.push(-amount);
+    recieverAcc.movements.push(amount);
+    updateUI(currentAccount);
+  }
+  inputTransferAmount.value = inputTransferTo.value = "";
+});
