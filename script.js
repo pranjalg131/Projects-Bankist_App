@@ -179,3 +179,16 @@ btnTransfer.addEventListener("click", function (e) {
   }
   inputTransferAmount.value = inputTransferTo.value = "";
 });
+
+btnLoan.addEventListener("click", function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+  if (
+    currentAccount.movements.some((mov) => mov >= 0.1 * amount) &&
+    amount > 0
+  ) {
+    currentAccount.movements.push(amount);
+    updateUI(currentAccount);
+  }
+  inputLoanAmount.value = "";
+});
