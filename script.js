@@ -73,6 +73,17 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
+///////////////////////////////////////////////
+//////////////////////////////////////////////
+// FUNCTIONS
+
+/*
+Function name: formatMovementsDate
+Args: Date to be formatted, 
+      locale (default is 'en-US')
+description : It recieves the date and formats with the help of Internationalization library into a consistent format 
+*/
+
 const formatMovementsDate = function (date, locale = "en-US") {
   const timeElapsed = (date1, date2) =>
     Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
@@ -84,12 +95,26 @@ const formatMovementsDate = function (date, locale = "en-US") {
   return Intl.DateTimeFormat(locale).format(date);
 };
 
+/*
+Function name: formatCurr
+Args: value to be formatted, 
+      locale
+      currency 
+description : It recieves the value and formats with the help of Internationalization library according to the required currency and locale 
+*/
+
 const formatCur = function (value, locale, currency) {
   return Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
   }).format(value);
 };
+
+/*
+Function name: setLogoutTimer
+Args: Time (in milliseconds)
+description : It displays a seconds clock on the page for the "session" implementation and logs the user out when finished. 
+*/
 
 const setLogoutTimer = function (time = 300) {
   const tick = function () {
@@ -110,6 +135,13 @@ const setLogoutTimer = function (time = 300) {
   let timer = setInterval(tick, 1000);
   return timer;
 };
+
+/*
+Function name: displayMovements
+Args: Account (object), 
+      sort (boolean) (default is false)
+Description : It displays the movements of the account in recent first fashion by default , if sort is true , then it displays them in decreasing order ie, deposits and then withdrawals. 
+*/
 
 const displayMovements = function (acc, sort = false) {
   const movs = sort
@@ -142,6 +174,12 @@ const displayMovements = function (acc, sort = false) {
   });
 };
 
+/*
+Function name: calcDisplayBalance
+Args: Account (object) 
+Description : It calculates the balance by summing up the movements array and then displays it nicely formatted with the formatCur function , the options can be customised to enable different formats.
+*/
+
 const calcDisplayBalance = function (acc) {
   const balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
   acc.balance = balance;
@@ -159,6 +197,12 @@ const calcDisplayBalance = function (acc) {
     new Date()
   );
 };
+
+/*
+Function name: calcSummary
+Args: Account (object) 
+Description : It calculates the deposits , withdrawals and the interest accumalated in the account and displays it nicely formatted using formatCur in the summary section of the app.
+*/
 
 const calcSummary = function (acc) {
   const deposits = acc.movements
@@ -188,6 +232,12 @@ const calcSummary = function (acc) {
   )}`;
 };
 
+/*
+Function name: createUsernames
+Args: Accounts (Array of accoount objects) 
+Description : It assigns the usernames to the users on the basis of their initials using the first letters of their names.
+*/
+
 const createUsernames = function (accounts) {
   // Since we need to mutate the orignal objects to add a property , hence using a forEach method
   accounts.forEach(function (acc) {
@@ -201,16 +251,24 @@ const createUsernames = function (accounts) {
 
 createUsernames(accounts);
 
+/*
+Function name: updateUI
+Args: Account (object) 
+Description : It is used to update the state of the application after an action, which results into a visible change.
+*/
+
 const updateUI = function (acc) {
   displayMovements(acc);
   calcDisplayBalance(acc);
   calcSummary(acc);
 };
 
-let currentAccount;
-let timer;
-
-btnLogin.addEventListener("click", function (e) {
+/*
+Function name: loginUser
+Args: Event e (object) 
+Description : It handles all the functionality of the login button like authentication , starting the session timer and setting the initial UI after the login using updateUI() , it also sets the state variables like current account for the first time.
+*/
+const loginUser = function (e) {
   e.preventDefault();
   inputLoginPin.blur();
   currentAccount = accounts.find(
@@ -230,9 +288,15 @@ btnLogin.addEventListener("click", function (e) {
     updateUI(currentAccount);
   }
   inputLoginUsername.value = inputLoginPin.value = "";
-});
+};
 
-btnClose.addEventListener("click", function (e) {
+/*
+Function name: closeAccount
+Args: Event e (object) 
+Description : It allows the current user to close their account with the bank and after successful deletion logs the user out.
+*/
+
+const closeAccount = function (e) {
   e.preventDefault();
   if (
     inputCloseUsername.value === currentAccount.username &&
@@ -246,9 +310,15 @@ btnClose.addEventListener("click", function (e) {
     containerApp.style.opacity = 0;
   }
   inputCloseUsername.value = inputClosePin.value = "";
-});
+};
 
-btnTransfer.addEventListener("click", function (e) {
+/*
+Function name: transferAmount
+Args: Event e (object) 
+Description : It allows the current user to transfer money to other users in the bank, it stores the dates and amount into the account objects of the sender and receiver
+*/
+
+const transferAmount = function (e) {
   e.preventDefault();
 
   const amount = Number(inputTransferAmount.value);
@@ -271,9 +341,15 @@ btnTransfer.addEventListener("click", function (e) {
     updateUI(currentAccount);
   }
   inputTransferAmount.value = inputTransferTo.value = "";
-});
+};
 
-btnLoan.addEventListener("click", function (e) {
+/*
+Function name: requestLoan
+Args: Event e (object) 
+Description : It allows the current user to request a loan from the bank , on the condition that they have a deposit of atleast 10% of the loan amount in the bank, the loan takes 5 seconds to show up in the account.
+*/
+
+const requestLoan = function (e) {
   e.preventDefault();
   const amount = Math.floor(inputLoanAmount.value);
   if (
@@ -289,10 +365,32 @@ btnLoan.addEventListener("click", function (e) {
     timer = setLogoutTimer();
   }
   inputLoanAmount.value = "";
-});
+};
 
-let isSorted = false;
-btnSort.addEventListener("click", function () {
+/*
+Function name: toggleSorted
+Args: -
+Description : It allows the current user to toggle the movements view in the application between "recent first" and "decreasing order" using  displayMovements().
+*/
+
+const toggleSorted = function () {
   isSorted = !isSorted;
   displayMovements(currentAccount, isSorted);
-});
+};
+
+// State Variables
+let currentAccount;
+let timer;
+let isSorted = false;
+
+// Event Handlers
+
+btnLogin.addEventListener("click", loginUser);
+
+btnClose.addEventListener("click", closeAccount);
+
+btnTransfer.addEventListener("click", transferAmount);
+
+btnLoan.addEventListener("click", requestLoan);
+
+btnSort.addEventListener("click", toggleSorted);
