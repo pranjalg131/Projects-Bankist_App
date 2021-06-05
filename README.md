@@ -15,5 +15,4 @@ A simple banking application with a minimalist UI [here](https://pranjalg131.git
 1. Use the following credentials
     - username : pg , Password : 1111 (INR).
     - username : jd , Password : 2222 (US).
-    - username : js , Password : 3333 (UK).
  
